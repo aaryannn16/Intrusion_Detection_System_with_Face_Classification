@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intruder Detection Dashboard</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #000000; /* Black background */
+            color: #ffffff; /* White text for contrast */
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            color: #ffffff;
+            margin-bottom: 40px;
+            text-shadow: 1px 1px 4px rgba(255, 255, 255, 0.1);
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 30px;
+            justify-content: center;
+        }
+
+        .section {
+            flex: 1;
+            min-width: 400px;
+            padding: 52px;
+            background: #1c1c1c; /* Dark grey background for sections */
+            border: 1px solid #333;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .section h2 {
+            color: #ffffff;
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        #classificationLabel {
+            display: block;
+            font-size: 1.5rem;
+            text-align: center;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            border: 1px solid #555;
+            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.1);
+        }
+
+        #historyList {
+            max-height: 300px; /* Define a fixed height */
+            overflow-y: auto; /* Enable vertical scrolling */
+            padding: 10px;
+            margin: 0;
+            list-style: none;
+            background-color: #2a2a2a;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+
+        #historyList li {
+            padding: 8px 12px;
+            margin-bottom: 8px;
+            background-color: #1c1c1c;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        #historyList li:hover {
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>Intruder Detection System</h1>
+    <div class="container">
+        <!-- Intruder Alerts Section -->
+        <div class="section" id="displaySection">
+            <h2>Intruder Alerts</h2>
+            <img id="displayImage" src="static/uploads/capture.jpg" alt="Latest Image" />
+            <label id="classificationLabel">Latest captured image name will appear here.</label>
+        </div>
+
+        <!-- Intrusion History Section -->
+        <div class="section" id="historySection">
+            <h2>Intrusion History</h2>
+            <ul id="historyList" class="history-list">
+                <!-- History list will be populated dynamically -->
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Function to fetch and update intrusion history
+        async function updateHistory() {
+            try {
+                const response = await fetch('/history');
+                const data = await response.json();
+
+                const historyListElement = document.getElementById("historyList");
+                const classificationLabel = document.getElementById("classificationLabel");
+                const imgElement = document.getElementById("displayImage");
+
+                historyListElement.innerHTML = ''; // Clear the history list before adding new items
+
+                if (data.history && data.history.length > 0) {
+                    const latestEntry = data.history[0]; // Get the latest entry (assuming history is sorted)
+
+                    // Update the classification label with the image name
+                    classificationLabel.textContent = `Latest Image: ${latestEntry.image_path.split('/').pop()}`;
+
+                    // Update the main display image
+                    imgElement.src = latestEntry.image_path;
+
+                    // Populate history list
+                    data.history.forEach(entry => {
+                        const listItem = document.createElement("li");
+
+                        // Create a clickable list item with timestamp and classification
+                        listItem.textContent = `${entry.timestamp}: ${entry.classification}`;
+                        listItem.onclick = function () {
+                            displayImage(entry.image_path); // Display the image when clicked
+                        };
+                        historyListElement.appendChild(listItem);
+                    });
+                } else {
+                    classificationLabel.textContent = "No intrusions detected.";
+                    historyListElement.innerHTML = "<li>No past intrusions recorded.</li>";
+                }
+            } catch (error) {
+                console.error('Error fetching intrusion history:', error);
+            }
+        }
+
+        // Function to update the main image section when a history item is clicked
+        function displayImage(imagePath) {
+            const imgElement = document.getElementById("displayImage");
+            imgElement.src = imagePath; // Change the image source to the selected image path
+        }
+
+        // Function to fetch and update the classification result
+        async function updateClassification() {
+            try {
+                const response = await fetch('/result');
+                const data = await response.json();
+
+                const classificationLabel = document.getElementById("classificationLabel");
+                const displayImage = document.getElementById("displayImage");
+
+                if (data.result) {
+                    classificationLabel.textContent = `Person: ${data.result}`;
+                } else {
+                    classificationLabel.textContent = "No classification result available.";
+                }
+
+                if (data.image_path) {
+                    displayImage.src = data.image_path; // Update the image displayed
+                }
+            } catch (error) {
+                console.error('Error fetching classification result:', error);
+            }
+        }
+
+        // Call updateHistory and updateClassification every 5 seconds to keep the data updated
+        setInterval(() => {
+            updateHistory();
+            updateClassification();
+        }, 5000);
+
+        // Initial load of history and classification
+        updateHistory();
+        updateClassification();
+    </script>
+</body>
+</html>
