@@ -1,2 +1,8 @@
 # Intrusion_Detection_System_with_Face_Classification
 This Project created to develop a Intrusion Detection System that can classify faces captured and send alerts to mobile Devices
+The project contains the follwing Files:
+1. Hardware_Arduino_Code: This file is for the esp32-CAM module, upload the following code on the esp32-CAM module and change the code accordingly. This code captures the image upon detection of movement from the PIR sensor. The captured image is converted to the JPEG format and then sent to the flask server with capture image date and Timestamp.
+2. Flask_Server_Code: This is the main server that server the frontend file, The server saves the incoming captured image into uploads folder with captured date and time. The server also sends the captured image to the frontend to display it. The sever updates the captured image in every 5 seconds. The server also uses the Face classification algrorithm to detect the person in the image from the provide image dataset by the user.
+3. Frontend_Web_Dashboard: This frontend web dashboard displays the current captured image with the classification result and also displays the previous captured image data with their corresponding classification results.
+4. Face_Classification_Training: This is a python code that uses keras and a pretrained model (ResNet50V2) for training of the model to classify images. The code trains the model and saves it as a keras file.
+5. Face_Classification_Testing: This file is used to check the accuracy of the model by testing it with real images provided by the user. The code provides a classification result along with a confidence value for the input image. 
